@@ -1397,3 +1397,127 @@ print(f"'Alice' 出现的次数: {count_alice}")
 #    - 正确姿势：使用 collections.Counter(contents)。它底层是哈希表（Hash），
 #      一次遍历（O(N)）即可完成所有词的频率统计，且在内存允许的情况下极快。
 # ! ============================================================================
+
+
+# ! ============================================================================
+# ! 【10.11 - 10.14 练习：JSON 数据存储与用户验证逻辑】
+# ! ============================================================================
+
+# ? 练习 10.11 喜欢的数
+from pathlib import Path
+import json
+path = Path('likes num.json')
+# contents = input("What number do you like? ")
+# a = json.dumps(contents)   # 虽然input返回就是字符串，直接写入json也没事，但是用dumps转换一下是有必要的，可以应对很多情况，loads同理
+# path.write_text(a)           # 如果存入时用了dumps而取出却没用loads或者反着会导致数据类型转换出错
+
+b = path.read_text()
+c = json.loads(b)
+print(f"I konw your favorite number! It's {c}.")
+
+
+# ? 练习 10.12 记住喜欢的数
+from pathlib import Path
+import json
+path = Path('likes num2.json')   # 作为全局变量，大家都能使用，我们分多个程序也是为了这个文件
+def read():
+    
+    if path.exists():
+        contents = path.read_text()
+        print(f"I konw your favorite number! It's {json.loads(contents)}.")
+    else: write()
+
+def write():
+    contents = input("What number do you like? ")
+    path.write_text(json.dumps(contents))    # ! write_text()返回写入的字符数量，是一个整数
+    print(f"We will remember your favorite number {contents}!")
+read()
+
+
+# ? 练习 10.13 用户字典
+from pathlib import Path
+import json
+
+path = Path('message.json')
+
+def read():
+    if path.exists():
+        # ! 🚨 自动挡第一步：先开门（open），把门把手交给 json
+        with open(path, 'r', encoding='utf-8') as f:
+            contents = json.load(f)  # json 自己进去把东西拿出来并翻译
+        print(f"Your message: {contents}")
+    else:
+        write()
+
+def write():
+    # ! 🚨 局部变量原则：别用全局变量，用完就扔
+    dic = {}
+    dic['username'] = input("What your username? ")
+    dic['from'] = input("Where are you from? ") # 顺便帮你把 form 改成 from
+    dic['old'] = input("How old are you? ")
+    
+    # ! 🚨 自动挡第二步：先开门（open），让 json 自己进去写
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(dic, f)
+    print("保存成功！")
+    print(f"Wellcome {dic['username']}")
+
+read()
+
+# ? 练习 10.14 验证用户（初版逻辑）
+# def greet_user():
+#     read()
+#     判断 = input("Message is true? ")
+#     判 = 判.lower()
+#     if 判 != 'true':
+#         get_new_username()
+
+# def get_new_username():
+#     write()
+
+# greet_user()
+
+
+# * 如果要总体结合，各司其职，我写一个程序
+from pathlib import Path
+import json
+path = Path('message2.json')
+
+dic = {}
+def read():
+    if path.exists():
+        with open(path, 'r') as f:
+            return json.load(f)   # 返回的就是dic字典，字典名会写入和返回
+    else: return None
+
+def write():
+    a = input("What's your username? ")
+    b = input("Where are you from? ")
+    c = input("How old are you? ")
+    dic['username'] = a
+    dic['from'] = b
+    dic['old'] = c
+    with open(path, 'w') as f:
+        json.dump(dic, f)
+    return dic
+
+def get_new_username():
+    dic = write()
+    print("保存成功")
+    print(f"We will remember you {dic['username']}!")
+
+def greet_user():
+    user_date = read()    # * 先拿返回读取的值再说
+    if user_date:
+        print(f"Wellcome {user_date['username']}!")
+        print(f"Your message is {user_date}")
+        判 = input("The message is True? ")
+        判 = 判.lower()
+        if 判 != 'true':
+            get_new_username()
+    else:
+        get_new_username()
+
+greet_user()
+
+# ! 补充：join()方法只能作用于字符或字符串，别的报错

@@ -2202,7 +2202,7 @@ print(first_up)
 # 10.1: 读取文件
 
 # 10.1.1: 读取文件的全部内容
-# 要读取文件，许要一个包含多干行文本的文件。下面创建一个文件，包含精确到小数点后30位的圆周率值，且在小数点后每10位处换行:
+# 要读取文件，要一个包含多干行文本的文件。下面创建一个文件，包含精确到小数点后30位的圆周率值，且在小数点后每10位处换行:
 # pi_digits.txt   <-- 已保存为同一目录,在这个文件夹里面打开
 # 3.1415926535
 #   8979323846
@@ -2694,3 +2694,201 @@ for filename in filenames:
 
 # 10.4 存储数据
 # 一种简单的方法是使用模块json来存储数据，让我们将简单的Python数据结构转换为JSON格式的字符串，并在程序再次运行时从文件中加载数据
+
+
+
+# 2026.11.11
+# 10.4.1 使用json.dump()和json.load() 前面的是存储，后面的事读取
+from pathlib import Path
+import json
+
+number = [2, 3, 5, 7, 11, 13]
+
+path = Path('number.json')
+contents = json.dumps(number)   # 将Python数据结构转换为JSON格式的字符串
+path.write_text(contents)     # 将JSON字符串写入文件
+print(contents)           
+# 这里的jsom.dumps()存储只是将数据换了一个格式存储，前面的Path对象指向一个文件，可以做很多事，核实文件存在，读取内容，将新数据写入等。
+# 因为path指向的文件是一个json文件，所以可以用json.load()读取数据，而且读取出来的数据类型是原来的数据类型，而不是字符串(除非传进去就是字符串)
+
+# 传进传出本来就什么都不变，只不过转换都有自己的转换方式ASWECR3ED4XZ2 12
+
+# write_text()自动生成文件，因为是path调用，而path指向的文件名是number.json
+
+number = json.loads(contents)  # 将JSON字符串转换回Python数据结构
+print(number)
+
+
+# 10.4.2 保存和读取用户生成的数据
+# 用json保存用户生成的数据很有必要，下面来看一个例子:提示用户在首次运行程序时输入自己的名字，并且在他再次运行时程序仍然记得他。
+# 先来存储用户名字:
+from pathlib import Path
+import json
+
+## username = input("What is your name? ")   #input注释掉
+
+path = Path('username.json')
+contents = json.dumps(username)   # 将Python数据结构转换为JSON格式的字符串
+path.write_text(contents)     # 将JSON字符串写入文件
+
+print(f"We'll remember you when you come back, {username}!")
+# 读取用户名字:
+username = json.loads(contents)   # 这里loads(contents)是因为写入的内容是json.dumps(username)转换过来的，所以读取的时候要用json.loads(contents)转换回来
+print(f"welcome back, {username}!")
+
+# loads，dumps转换读出存入，但read，write是读取和写入字符串
+# 只要记住loads取json类型文本，dumps存入Python类型文本，后面的右值反正类型要对应
+
+
+# 我们将两个程序合并到一个程序，在这个程序中，首先尝试从文件中读取用户名，如果找不到文件，就提示用户输入自己的名字，并将其存储到文件中(username.json)。
+# 下次运行程序时，就会记住用户的名字。可以不写try-except代码块，而是使用Path.exists()来检查文件是否存在
+from pathlib import Path
+import json
+
+path = Path('username.json')
+if path.exists():   # 检查文件是否存在,不存在返回False,存在返回True
+    contents = path.read_text()   # 读取文件内容
+    username = json.loads(contents)   # loads只接受字符串，因为json就是文本，返回时会转换为相应类型
+    print(f"Welcome back, {username}!")
+else:
+    username = input("What is your name? ")   # 提示用户输入名字
+    contents = json.dumps(username)   # dumps是存入，会自动识别存入的内容转换为文本
+    path.write_text(contents)     # 将JSON字符串写入文件
+    print(f"We'll remember you when you come back, {username}!")
+# loads只接受字符串（或字节流），因为json的本质就是纯文本。解析后，会根据JSON规则返回对应的Python类型（字典、列表等）。
+# dumps是“序列化打包”，它接收Python对象，自动将其“压扁脱水”转换成JSON格式的纯文本字符串（str）。
+
+
+# 10.4.3 重构
+# 划分一系列具体函数来进行改进程序，这叫做重构
+# 要重构remember_me.py程序，可将其大部分逻辑放到一个或多个函数中。remember_me.py程序重点是问候用户，因此我们把其放进greet_user()的函数中:
+from pathlib import Path
+import json
+
+def greet_user():
+    """问候用户，并指出起名字"""
+    path = Path('username.json')
+    if path.exists():
+        contents = path.read.text()
+        username = json.loads(contents)
+        print(f"Welcome back, {username}!"
+    else:
+        username = input("What is your name? ")
+        contents = json.dumps(username)  # content已经被dumps转成json的数据格式
+        path.write_text(contents)   # 这里写入非常关键，这才是存储的要素，dumps只是转换格式，write_text才是存储
+        print(f"We'll remember you when you come back, {username}!")
+
+# dumps配合write，read配合loads，绝佳啊
+# JSON与文件I/O的分工协作
+# 用法：json.dumps()/loads() vs file.read()/write()
+# 注意事项：JSON模块的职责极度单一，只负责“对象 \leftrightarrow 文本”的翻译，根本不碰硬盘。硬盘的物理读写，必须靠Python的文件对象（IO）来做。
+#   底层套路（手动挡）：
+# · 写入：f.write(json.dumps(obj)) （先打包成文本，再物理写入）
+# · 读取：json.loads(f.read()) （先物理读取，再解析成对象）
+
+#   底层套路（自动挡）：
+#  要with open(path, 'r'或'w') as f:
+# · 写入：json.dump(obj, f) （底层自动帮你先dumps再write）
+# · 读取：json.load(f) （底层自动帮你先read再loads）
+#   极客箴言：JSON是翻译官，File是搬运工。带 s 的处理纯文本，不带 s 的是一条龙直通文件。
+
+
+# 考虑到现在改用了一个函数，因此为其添加一个文档文字串的注释。但greet_user()函数所做的不仅是问候用户，还在存储了用户名时获取它，没存时提示输入
+# 下面重构greet_user()，不让它执行这么多任务。首先将获得已存储用户名的代码移到另一个函数中:
+from pathlib import Path
+import json
+def get_stored_username():
+    """如果存储了用户名，就获取它"""
+    if path.exists():
+        contents = path.read_text()
+        username = json.loads(contents)
+        return username     # read读取文件给loads“翻译”，翻译完后返回出去
+    else:
+        return None   # 因为只管获取用户名，所以没有存储就返回None，表示没有获取到用户名
+
+# 新增的get_stored_username()函数目标明确，如果不存在返回None这是不错的做法:要么返回预期值，要么返回None。是我们可以做简单测试
+def greet_user():
+    """问候用户，并指出起名字"""
+    username = get_stored_username()   # 调用获取用户名的函数
+    if username:
+        print(f"Welcome back, {username}!")
+    else:
+        username = input("What is your name? ")
+        contents = json.dumps(username)
+        path.write_text(contents)
+        print(f"We'll remember you when you come back, {username}!")
+greet_user()
+
+# 还要将greet_user()的另一个代码块提取出来，将在没有存储用户名时提示用户输入用户名的代码移到一个新的函数中:
+from pathlib import Path
+import json
+def get_stored_username():
+    """如果存储了用户名，就获取它"""
+    if path.exists():
+        contents = path.read_text()
+        username = json.loads(contents)
+        return username     # read读取文件给loads“翻译”，翻译完后返回出去
+    else:
+        return None 
+
+def get_new_username():
+    """提示用户输入用户名"""
+    username = input("What is your name? ")
+    contents = json.dumps(username)
+    path.write_text(contents)
+    return username     # 输入了就要打印，就要存储，返回值是为了打印，存储这一步已经完成
+
+def greet_user():
+    """问候用户，并指出起名字"""
+    username = get_stored_username()   # 调用获取用户名的函数
+    if username:
+        print(f"Welcome back, {username}!")
+    else:
+        username = get_new_username()   # 调用输入用户名的函数
+        print(f"We'll remember you when you come back, {username}!")   # 打印返回值
+
+greet_user()   # 调用这个函数，程序就会运行起来，先尝试获取用户名，如果没有存储就提示输入用户名并存储，最后打印问候语
+
+
+# ============================================================================
+# 【极客终极复盘：Python 遮蔽机制与 C 语言作用域的物理碰撞】
+# ============================================================================
+# 
+# 1. 变量本质（盒子 vs 门牌号）：
+#    - C 语言：变量是装数据的物理盒子。类型决定盒子大小（int 4字节）。
+#    - Python：变量是贴在内存对象上的“门牌号”（指针）。类型跟着对象走。
+# 
+# 2. 作用域判定（块级物理隔离 vs 编译期静态查户口）：
+#    - C 语言：按大括号 {} 划分物理隔离区。内层同名变量直接在栈上开新坑，
+#      外层屏蔽，出了大括号瞬间物理销毁。块与块之间互不影响。
+#    - Python：没有块级作用域（if/for 不产生新作用域）。作用域按【整个函数体】
+#      划分，且在【编译期】就直接定死了。
+# 
+# 3. 🚨 核心碰撞：Python 的 UnboundLocalError（遮蔽机制）
+#    - C 语言思维：函数里没定义，自然去外面找全局变量。
+#    - Python 真相：只要函数体内【任意位置】出现了 x = ... 赋值，编译器在进门
+#      那一刻，就把 x 登记为“本地户口”。
+#    - 物理现场：
+#      x = "global"
+#      def f():
+#          print(x)  # 报错！编译器认为 x 是本地的，但此时本地坑位还没赋值
+#          x = "local"
+#    - 破局：要么在函数开头写 x = None 提前占坑，要么用 global 声明借用。
+# 
+# 4. 函数传参（物理拷贝 vs 引用绑定）：
+#    - C 语言：默认值传递（拷贝副本）。想改外部变量，必须传指针（物理地址）。
+#    - Python：全部是“对象引用传递”（类似传指针）。传不可变对象（str/int）改不了，
+#      传可变对象（list/dict）会在原地改。
+# 
+# 5. 内存管理（硬核手动 vs 自动回收）：
+#    - C 语言：局部变量在栈，malloc 在堆。不 free 就内存泄漏。
+#    - Python：所有对象都在堆（Heap）上。靠底层 C 写的【引用计数 + GC】自动清场。
+# 
+# 6. [极客箴言]：
+#    - C 是“物理缝合”，所见即所得，大括号就是物理边界。
+#    - Python 是“魔法结界”，函数即领地，只要写了等号，就是抢占地盘。
+# ============================================================================
+
+
+# “Python 没有块级作用域，只有函数级作用域；函数内部对全局变量只读不写，除非使用 global 声明。”
+# join()方法只能作用于字符或字符串，别的报错
