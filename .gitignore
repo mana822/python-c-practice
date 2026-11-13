@@ -18,7 +18,7 @@ env/
 
 # 编辑器与系统
 .vscode/.history/
-tempCodeRunnerFile.c
+tempCodeRunnerFile.*
 .idea/
 *.swp
 .DS_Store

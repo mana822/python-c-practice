@@ -2,7 +2,8 @@ import sys       # 导入系统模块，调用它，真正进入底层
 import pygame
 
 from settings import Settings
-class AlienIncasion:
+from ship import Ship
+class AlienInvasion:
     """管理游戏资源和行为的类"""
     def __init__(self):
         """初始化游戏并创建游戏资源"""
@@ -22,28 +23,37 @@ class AlienIncasion:
         # display.set_mode()创建的surface对象是一个空白窗口，默认背景是黑色。要想改变背景颜色，需要使用fill()方法填充颜色
         # fill()方法需要一个颜色实参，Pygame使用RGB颜色模式表示颜色。RGB模式使用红、绿、蓝三种颜色的不同强度来表示其他颜色。每种颜色的强度用0~255之间的整数表示
 
+        self.ship = Ship(self)  # 调用实例，这里的self执行当前AlienInvasion实例。(只要self化的参数名称(形参名称无所谓)对应，就能直接拿到)这个参数让Ship能够访问游戏资源，如对象screen。
 
         # pygame.display 是一个子模块
     def run_game(self):
         """开始游戏的主循环"""
         while True:      # 这个不断地循环包含一个事件的循环以及管理屏幕更新的代码。事件是由用户玩游戏时执行的操作，如按键或移动鼠标。
-            # 侦听键盘和鼠标事件
-            for event in pygame.event.get():   # 嵌套的for循环是一个事件循环，以侦听事件并根据发生的事件类型执行适当的任务，为了响应事件
-                # 使用pygame.event.get()来访问Pygame检测到的事件，这个函数返回一个列表，其中包含它上一次调用后发生的所有事件。所有键盘和鼠标事件都导致for循环运行
-                if event.type == pygame.QUIT: # 使用if语句来检测并响应特定的事件，如果响应状态是点击关闭按钮，检测到pygame.QUIT状态，就调用sys.exit()
-                    sys.exit()
-
-            # 每次循环时都重绘屏幕
-            self.screen.fill(self.settings.bg_color)  # 调用fill()方法用这种背景色填充屏幕。fill()方法用于处理surface，只接受一个表示颜色的实参
-
-
+            self._check_events()   # 先采集状态，再绘图
+            self._update_screen()
             # 让最近绘制的屏幕可见
-            pygame.display.flip()   # 调用display.flip()命令Pygame让最近绘制的屏幕可见(翻页)。这里，他在每次实行while循环时都绘制一个空屏幕，并擦去旧屏幕，
-            # 这样我们在移动游戏元素时，pygame.display.filp()将不断更新屏幕，以显示新位置上的元素并隐藏原来位置上的元素
+
 
             self.clock.tick(60)     # time.Clock()中time模块的Clock类中的tick方法接受一个参数:游戏的频率。Pygame将尽可能确保这个循环每秒恰好运行60次
 
+    def _check_events(self):
+        # 侦听键盘和鼠标事件
+        for event in pygame.event.get():   # 嵌套的for循环是一个事件循环，以侦听事件并根据发生的事件类型执行适当的任务，为了响应事件
+            # 使用pygame.event.get()来访问Pygame检测到的事件，这个函数返回一个列表，其中包含它上一次调用后发生的所有事件。所有键盘和鼠标事件都导致for循环运行
+            if event.type == pygame.QUIT: # 使用if语句来检测并响应特定的事件，如果响应状态是点击关闭按钮，检测到pygame.QUIT状态，就调用sys.exit()
+                sys.exit()
+
+    def _update_screen(self):
+        """更新屏幕上的图像，并切换到新屏幕"""
+        # 每次循环时都重绘屏幕
+        self.screen.fill(self.settings.bg_color)  # 调用fill()方法用这种背景色填充屏幕。fill()方法用于处理surface，只接受一个表示颜色的实参
+
+        self.ship.blitme()   # 调用blitme()方法将飞船绘制到屏幕上
+        pygame.display.flip()   # 调用display.flip()命令Pygame让最近绘制的屏幕可见(翻页)。这里，他在每次实行while循环时都绘制一个空屏幕，并擦去旧屏幕，
+        # 这样我们在移动游戏元素时，pygame.display.filp()将不断更新屏幕，以显示新位置上的元素并隐藏原来位置上的元素
+
+
 if __name__ == '__main__':  # 仅当直接运行该文件执行
     # 创建实例并运行游戏
-    ai = AlienIncasion() 
+    ai = AlienInvasion() 
     ai.run_game()

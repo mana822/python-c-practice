@@ -8,7 +8,7 @@ class Ship:
         self.screen_rect = ai_game.screen.get_rect() # 使用get_rect()方法访问屏幕的rect属性，并将其赋值给self.screen_rect，这让我们能将飞船放到正确位置
 
         # 加载飞船图像并获取其外接矩形
-        self.image = pygame.image.load('images/ship.bmp')  # 用这个方法传递图像，这时将返回的surface赋值给self.image
+        self.image = pygame.image.load('xiangmu/alien_invasion/images/ship.bmp')  # 用这个方法传递图像，这时将返回的surface赋值给self.image
         self.rect = self.image.get_rect()    # 通过其获得相应surface的属性rect,以便将来使用它来指定飞船的位置(这是飞船的rect)
 
         # 每艘新飞船都放在屏幕底部的中央
@@ -17,7 +17,7 @@ class Ship:
 # 在pygame里面，原点(0, 0)位于屏幕的左上角，当一个点往右下角移动时，它的坐标值将增大，在1200*800的屏幕上，右下角对应(1200,800)
 # 在处理rect对象时，可使用矩形的四个角及中心的x坐标和y坐标，通过设置这些值来指定矩形的位置。居中center、centerx或cnetery，边缘top、bottom、left或right
 # 组合midbottom、midtop、midleft和midright
-    def biltme(self):
+    def blitme(self):
         """在指定位置绘制飞船"""
         self.screen.blit(self.image, self.rect)  # 用blit会将图像绘制到self.rect指定位置
 
