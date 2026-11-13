@@ -2771,7 +2771,7 @@ def greet_user():
     if path.exists():
         contents = path.read.text()
         username = json.loads(contents)
-        print(f"Welcome back, {username}!"
+        print(f"Welcome back, {username}!")
     else:
         username = input("What is your name? ")
         contents = json.dumps(username)  # content已经被dumps转成json的数据格式
@@ -2892,3 +2892,358 @@ greet_user()   # 调用这个函数，程序就会运行起来，先尝试获取
 
 # “Python 没有块级作用域，只有函数级作用域；函数内部对全局变量只读不写，除非使用 global 声明。”
 # join()方法只能作用于字符或字符串，别的报错
+# 2026.11.12
+# 使用pip安装pytest
+# 第三包是独立于python的核心库，有些深受欢迎的第三包会被收入标准库
+
+# 11.1.1 更新pip
+# python -m pip install --upgrade pip
+# python -m pip 让python运行pip模块;第二部分install --upgrade 让pip更新一个已安装的包，而最后一部分pip指定要更新哪个第三方包
+
+
+# 11.1.2 安装pytest
+# python -m pip install --user pytest 
+# 这里使用的核心命令也是pip install，但指定的标志不是--upgrade,而是--user。这个标志让python只为当前用户安装指定的包
+
+# 11.2 测试函数
+# 下面是一个简单的函数，他接受名和姓并返回格式规范的名字:
+def get_formatted_name(first, last):
+    '''生成格式规范的姓名'''
+    full_name = f"{first} {last}"
+    return full_name.title()
+# 已保存为name_function.py
+
+# 为了核实get_formatted_name()正常工作，我们编写一个使用这个函数的程序:
+from name_function import get_formatted_name
+# 我是说from 文件名import 类型
+# 这个类型可以是函数可以是类，只要函数不嵌套在类里面就是同级，嵌套了，那就是通过类调用函数
+
+# print("Enter 'q' at any time to quit.")
+# while True:
+#     first = input("\nPlease give me a first name: ")
+#     if first == 'q':
+#         break
+#     last = input("Please give me a last name: ")
+#     if last == 'q':
+#         break
+
+#     formatted_name = get_formatted_name(first, last)
+#     print(f"\tNeatly formatted name: {formatted_name}")
+
+# 如果要增添新功能，且不改变原来的函数，并进行测试。pytest提供了一中自动测试函数输出的高效方式
+
+# 11.2.1 单元测试和测试实例
+# 11.2.2 可通过的测试
+
+# 使用pytest针对get_formatted_name()函数的测试如下:
+from name_function import get_formatted_name  # 导入要测试的ger_formatted_name()函数
+
+def test_first_last_name():    # 测试文件的名称很重要，必须以test_，定义一个测试函数
+    """能够正确处理吗"""
+    formatted_name = get_formatted_name('janis', 'jolin')    # 调用测试函数，正常传递参数，要有返回值才能接住
+    assert formatted_name == 'Janis Jolin'   # 断言(assertion)就是声称满足特定的条件:这里声称formatted_name的值为'Janis Joplin'。
+
+# 已经将要测试的代码放入test_name_function.py
+
+# 未通过的测试，我们来修改get_formatted_name()，使其能够处理中间名，但同时故意让这个函数无法正确地处理像Janis Joplin这样只有名和姓的姓名。
+
+def get_formatted_name(first, middle, last):
+    """生成格式规范的姓名"""
+    full_name = f"{first} {middle} {last}"
+    return full_name
+
+# 11.2.5 在测试未通过怎么办
+# 别急着改，先看
+# 要将中间名设置为可选的，可在函数定义中将形参middle移到形参列表末尾，并默认为一个空字符串。再加一个if测试
+
+def get_formatted_name(first, last, middle = ''):
+    if middle:
+        full_name = f"{first} {middle} {last}"
+    else:
+        full_name = f"{first} {last}"
+    return full_name.title()
+
+# 11.2.6 添加新测试
+# 在文件test_name_function.py查看
+
+# ============================================================================
+# 【极简笔记：sorted() 如何对字典进行排序？】
+# ============================================================================
+#
+# 🚨 核心物理真相：
+# 字典底层是哈希表，天生无序，没有 sort 方法！
+# sorted(字典) 的物理动作是：把字典里的元素掏出来，装进一个【列表】里进行排序。
+# 返回结果永远是【列表（list）】，不再是你原来的字典！
+#
+# ----------------------------------------------------------------------------
+# 🎯 场景一：默认排序（只排序“键 Key”）
+# ----------------------------------------------------------------------------
+my_dict = {'b': 2, 'a': 5, 'c': 1}
+# 直接扔进 sorted，它只会把键（'b', 'a', 'c'）掏出来排
+result = sorted(my_dict)   # sorted返回列表(sorted()作用于任何可迭代对象，而.sort()只能用于列表且返回None)
+print(result)  # 输出：['a', 'b', 'c'] （注意：这里是个列表！）
+
+# ----------------------------------------------------------------------------
+# 🎯 场景二：按“值 Value”排序（最常用，比如排行榜）
+# ----------------------------------------------------------------------------
+# 物理动作：
+# 1. my_dict.items() 把字典变成键值对元组的列表：[('b', 2), ('a', 5), ('c', 1)]
+# 2. key=lambda x: x[1] 告诉 sorted：拿元组的第 1 个位置（值）去比较大小
+result = sorted(my_dict.items(), key=lambda x: x[1])
+print(result)  # 输出：[('c', 1), ('b', 2), ('a', 5)] （按值从小到大排好了）
+
+# ----------------------------------------------------------------------------
+# 🎯 场景三：排完序，怎么变回字典？
+# ----------------------------------------------------------------------------
+# 因为 sorted() 吐出的是列表，用 dict() 强行罩住它，就能变回字典！
+# （Python 3.7 之后，字典会记住插入顺序，所以能保住排序后的样子）
+result_dict = dict(sorted(my_dict.items(), key=lambda x: x[1]))
+print(result_dict) # 输出：{'c': 1, 'b': 2, 'a': 5}
+
+# ----------------------------------------------------------------------------
+# 🧐 赛博极客总结：
+# 1. 为什么字典不能直接排？因为哈希表（散列）是为了“瞬间查找”，不是为了“排队”。
+# 2. sorted() 就像个包工头：不管什么数据结构进来，统统变成列表，用 C 语言底层的
+#    Timsort 算法排序，排完再交给你。
+# 3. 记住万能公式（按值排序）：sorted(dict.items(), key=lambda x: x[1])
+# ============================================================================
+
+
+
+# ============================================================================
+# 【极客终极复盘：lambda 匿名函数 —— 用完即弃的“表达式刺客”】
+# ============================================================================
+#
+# 1. 逻辑本质（人类直觉 vs 机器物理）：
+#    - 人类直觉：函数必须用 def 定义，必须有名字，必须能反复调用。
+#    - 机器物理：lambda 是内存里的一个“一次性表达式”。它没有名字，
+#      不占用命名空间，在底层编译成极其精简的代码对象，用完立刻被 GC 物理超度。
+#
+# 2. 语法拆解（与 C 语言的函数指针对照）：
+#    - 语法：lambda 参数1, 参数2 : 返回值表达式
+#    - 物理真相：冒号左边是形参（相当于 C 的形参），冒号右边是 return 的值。
+#    - C 语言对照：相当于一个没有名字的内联函数（inline function），或者传进
+#      qsort 里的那个 cmp 函数指针。
+#
+# 3. 认知碰撞（为什么非要用它？）：
+#    - 当你只需要一个极其简单的转换规则（比如取元组的第 2 个元素，或者求平方），
+#      去写 def 纯属脱裤子放屁，不仅占内存，还污染了全局名字空间。
+#    - 极客做法：直接把 lambda 当参数塞进去，比如 sorted() 里的 key。
+# 
+# 4. 操作法则与致命限制（物理边界）：
+#    - 铁律一：lambda 后面只能跟一个【表达式】，绝对不能写代码块（不能写 for，不能写多行）。
+#    - 铁律二：不能包含 return 关键字（因为表达式自带 return 属性）。
+#    - 铁律三：如果逻辑超过两步（比如要判断加循环），立刻放弃 lambda，老老实实去写 def。
+# 
+# 5. 核心应用场景（极客实战）：
+#    - 排序（最常用）：sorted(my_dict.items(), key=lambda x: x[1])  # 按值排序
+#    - 快速映射：list(map(lambda x: x**2, nums))                   # 批量求平方
+#    - 快速过滤：list(filter(lambda x: x > 0, nums))               # 过滤正数
+# 
+# 6. [极客箴言]：
+#    - def 是注册了商标的正规军，lambda 是打完就跑的雇佣兵。
+#    - lambda 存在的唯一意义，就是让那些高阶函数（sorted/map/filter）的调用，
+#      在物理形态上显得极其纯粹、干净、毫无废话。
+# ============================================================================
+
+
+
+# ============================================================================
+# 【极客终极复盘：pytest 自动化测试框架的核心作用】
+# ============================================================================
+#
+# 1. 逻辑本质（为什么非要按它的规矩建文件？）：
+#    - C 语言的测试：写个 main 函数，手动调函数，手动 printf 看结果，肉眼比对。
+#    - pytest 的物理机制：【自动发现（Auto-Discovery）】。只要你的文件名叫 test_*.py，
+#      函数名叫 test_*，它就会用底层的反射机制把你所有的测试函数全抓出来排队执行。
+#      这就是为什么你觉得麻烦，因为这恰恰是【自动化的入场券】。
+#
+# 2. 核心作用一：极简断言（Assert）
+#    - 不使用 unittest 里繁琐的 self.assertEqual(a, b)。
+#    - 直接写 Python 原生的 assert 语句。底层是 C 语言写的比较指令，如果断言失败，
+#      pytest 会自动拦截，并在终端高亮打印出具体的差异值，连 print 都省了。
+#
+# 3. 核心作用二：测试夹具（Fixture）—— 解决环境初始化的物理隔离
+#    - 痛点：你测 100 个函数，每个都要连接一次数据库或者创建一次文件，写吐了。
+#    - 魔法：用 @pytest.fixture 定义一个前置函数，测试函数直接把名字当参数传进去。
+#      pytest 会在运行测试前自动调用它，运行完自动销毁，实现物理级别的环境隔离。
+#
+# 4. 核心作用三：参数化（Parametrize）—— 批量灌注畸形数据
+#    - 痛点：你想测试一个加法函数能不能处理各种变态输入，得写无数个测试函数。
+#    - 魔法：@pytest.mark.parametrize("a, b, expected", [(1, 2, 3), (-1, 1, 0), (0.1, 0.2, 0.3)])
+#      给它一个列表，它会自动把这组数据跑 N 遍，相当于批量注入测试用例。
+#
+# 5. 核心作用四：异常捕获（raises）
+#    - 测试你的代码“会不会按照预期报错”。比如：
+#      with pytest.raises(ZeroDivisionError): 1 / 0
+#      这句代码只要成功触发了除零异常，测试就通过；如果没触发，测试反而失败！
+#
+# 6. [极客箴言]：
+#    - 自己写 main 函数测试，是“作坊式手工打磨”。
+#    - 用 pytest，是“全自动流水线质量检测”。你只负责写断言，它负责帮你全量扫描、
+#      跑批处理、生成测试报告。
+# ============================================================================
+
+
+# 11.3 测试类
+# 11.3.1 各种断言
+#       assert a == b      断言两个值相等
+#       assert a != b      断言两个值不相等
+#       assert a           断言a的布尔求值为Ture
+#       assert not a       断言a的布尔求值为Flase
+#       assert element in list   断言元素在列表中
+#       assert element not in list    断言元素不在列表中
+
+# 这里列出的只是九牛一毛，测试能包含任意可用条件语句的断言
+
+# 11.3.2 一个要测试的类
+class AnonymousSurvey:
+    """收集匿名调查问卷的答案"""
+    def __init__(self, question):
+        """存储一个问题，并为存储答案做准备"""
+        self.question = question
+        self.responses = []
+    def show_question(self):
+        """显示调查问卷"""
+        print(self.question)
+    def store_response(self, new_response):
+        """存储单份调查答案"""
+        self.responses.append(new_response)
+    def show_results(self):
+        """显示收集到的所有答案"""
+        print("Survey results: ")
+        for response in self.responses: # 只要是能被直接被实例调用到的变量要self化，而内部变量只能通过返回值拿到，内部变量通常是参与内部运行，没必要展现
+            print(f"-{response}")
+# 以上存入survey.py
+# 为了证明类能够正确工作，编写使用它的程序:
+
+from survey import AnonymousSurvey
+# 定义一个问题，并创建一个表示调查的AnonymousSurvey对象
+question = "What language did you first learn to speak"
+language_survey = AnonymousSurvey(question)
+
+# 显示问题并存储答案
+language_survey.show_question()
+print("Enter 'q' at any time to quit.\n")
+while True:
+    # response = input("Language: ")
+    response = 'q'    # 为了避免input加的，读取时删除，并解除input注释
+    if response == 'q':
+        break
+    language_survey.store_response(response)
+# 显示调查结果
+print("\nThank you to everyone who participated in survey!")
+language_survey.show_results()
+
+# 在一个程序里面循环初始化会弄丢数据，但是每次程序所有数据丢失
+
+# ============================================================================
+# 【极简笔记：程序生命周期与数据持久化（内存 vs 硬盘）】
+# ============================================================================
+#
+# 1. 物理真相（易失 vs 非易失）：
+#    - Python/C 的变量：活在内存在（RAM）。程序一关，电容放电，数据物理灰飞烟灭。
+#    - JSON/文件：活在硬盘里（SSD）。只要物理介质不坏，数据永远存在。
+#
+# 2. 为什么一定要用 JSON？（跨语言的物理打包箱）
+#    - C 语言直接 fwrite 结构体二进制：换个编译器/系统（内存对齐变了），读出来就是乱码。
+#    - JSON 是纯文本格式：不管是 C、Python 还是 Java，只要有解析器，就能无损还原数据结构。
+#
+# 3. 数据持久化的物理闭环（经典4步曲）：
+#    - 【存】：内存里的活物（字典） -> dumps（压扁成文本） -> write（刻入硬盘）。
+#    - 【取】：read（从硬盘抽出） -> loads（重新建对象） -> 放回内存。
+#
+# 4. [极客箴言]：
+#    - 内存条是随时清空的工作台，硬盘是永久保存的保险柜，JSON 是标准打包箱。
+# ============================================================================
+
+# 11.3.3 测试AnonymousSurvey类
+from survey import AnonymousSurvey
+def test_store_single_response():
+    """测试单个答案会被妥善保管"""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)
+    language_survey.store_response('English')   # 我们测试，所以自己存一个
+    assert 'English' in language_survey.responses   # 这里是直接调用列表，已经self化的列表
+def test_store_three_responses():
+    """测试三个答案会被妥善存储"""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)
+    responses = ['English', 'Spanish', 'Mandarin']
+    for response in responses:
+        language_survey.store_response(response)   # 我们一个个传，不想列表里面的一个元素是列表吧
+    for response in responses:
+        assert response in language_survey.responses  # 逐个匹对，错一个就完了 
+
+
+# ============================================================================
+# 【极客终极复盘：列表/元组的承载力 与 三大扩容刺客（append/extend/update）】
+# ============================================================================
+#
+# 1. 逻辑本质（万物皆可装）：
+#    - 人类直觉：列表和元组像 C 语言数组，只能装同一类数据。
+#    - 机器物理：底层全是【PyObject * 指针】数组。所以它们什么都能装（数字、字符串、
+#      函数、字典、甚至嵌套自己）。
+#
+# 2. 物理差异：List（活页本） vs Tuple（刻石板）
+#    - List（列表）：可变。坑位(元素)指针可以随时替换(列表指针还是不变的)，底层满了会自动 realloc 扩容。
+#    - Tuple（元组）：不可变。坑位里的指针地址一旦确定，物理死锁，不可重新赋值。
+#    - 🚨 极客天坑（浅不可变）：如果元组里装了列表（如 t = (1, [2, 3])），
+#      你可以执行 t[1].append(4)。因为元组锁死的是列表的“物理地址”，但管不了
+#      那个地址里面的房子怎么装修（扩容）。
+#
+# 3. 🚨 三大扩容刺客大乱斗（底层物理动作）：
+#
+#    【list.append(x)】：单挑。把 x 当成一个整体（指针），塞进列表尾部。
+#      - 如果 x 是列表，直接嵌套：a = [1, 2]; a.append([3, 4]) -> [1, 2, [3, 4]]
+#
+#    【list.extend(iterable)】：拆包。遍历 iterable，把里面的元素一个个拿出来塞。
+#      - 如果接列表：a.extend([3, 4]) -> [1, 2, 3, 4] （完美融合，一维平铺）
+#      - 如果接字典：a.extend({'name': '极客'}) -> 只吞键 Key，值被物理无视。
+#      - 如果接字典.items()：吞进元组 -> [('name', '极客')]。
+#
+#    【dict.update(other)】：同化。专属字典的方法，不是列表的。
+#      - 物理动作：把另一个字典或键值对，合并进当前字典。遇到同名键，直接物理覆盖。
+#
+# 4. 💻 跨界极客视角（C语言映射）：
+#    - List 相当于 C 的动态指针数组 int **arr。
+#    - Tuple 相当于 C 的 const 指针数组 int * const arr[]。
+#    - append 是 arr[count++] = x; 
+#    - extend 是 for 循环遍历 + 逐个 arr[count++] = item;
+#
+# 5. [极客箴言]：
+#    - append 是“连锅端”（嵌套），extend 是“倒出来”（平铺）。
+#    - 容器里装的不是数据，是门牌号（地址）。地址不可换（元组），但屋里可动土（列表）。
+#    - 字典合并找 update，列表平铺找 extend，切忌张冠李戴。
+# ============================================================================
+
+# 11.3.4 使用夹具
+# 夹具可帮助我们搭建测试环境。在pytest中，要使用夹具，可编写一个使用装饰器@pytest.fixture装饰的函数。装饰器是放在函数定义前面的指令。
+import pytest
+from survey import AnonymousSurvey
+@pytest.fixture  # 它下面的函数就是一个夹具函数，pytest会自动运行它(被动)，并将其返回值传递给测试函数
+def language_survey():
+    """一个可供所有测试函数使用的AnonymousSurvey"""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)  # 创造实例时执行的是__init__里面的程序
+    return language_survey    # 这里直接返回实例对象，后面测试函数直接调用这个夹具就可以使用这个实例对象了(相当于直接给指针了)
+
+def test_store_single_response(language_survey): # 当测试函数的形参与夹具函数的名字相同时，pytest会自动运行夹具函数，并将其返回值传递给测试函数
+    """测试单个答案会被妥善保管"""                 # 如果夹具函数没有返回值，则会将None传递给测试函数
+    language_survey.store_response('English')
+    assert 'English' in language_survey.responses
+
+def test_store_three_responses(language_survey):  # 只要函数前缀是test_，pytest就会自动运行它，而形参则是由夹具先判断，如果与夹具函数相同则会自动运行夹具函数，并将其返回值传递给测试函数
+    """测试三个答案会被妥善存储"""                 # 记住，夹具函数的运行是被动的，它晚于测试函数被调度，却早于测试函数执行，只有当测试函数需要它时，它才会被调用
+    responses = ['English', 'Spanish', 'Mandarin']
+    for response in responses:
+        language_survey.store_response(response)
+    for response in responses:
+        assert response in language_survey.responses
+
+# test_surver.py
+# 必须以test做文件名开头，pytest才会自动发现它并运行里面的测试函数，函数或类(大写T开头)也必须以test开头，pytest才会自动发现它并运行里面的测试函数
+
+
+
+# 第二部分，项目从现在开始，项目文件夹分工明确我们新建了一个xiangmu文件夹

@@ -1475,3 +1475,25 @@ def greet_user():
 greet_user()
 
 # join()方法只能作用于字符或字符串，别的报错
+
+
+# 2026.11.12
+# 练习 11.1: 城市和国家
+# --sinp--
+
+# 练习 11.3: 雇员
+class Employee:
+    def __init__(self, firstname, lastname, money):
+        """姓、名、年薪"""
+        self.firstname = firstname
+        self.lastname = lastname
+        self.money = money
+    # __init__里面不能有返回值，默认返回None
+    def give_raise(self, append = 5000):
+        self.money += append
+        return self.money
+
+# 测试文件写在text_ceshi.py
+
+
+
