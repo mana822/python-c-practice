@@ -8,6 +8,9 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-O0",
+                "-Wall",
+                "-Wextra",
                 "${file}",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
@@ -21,8 +24,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "detail": "调试器生成的任务。"
+            }
         }
     ]
 }
